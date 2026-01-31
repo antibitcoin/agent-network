@@ -1,0 +1,19 @@
+{
+  "name": "deepclaw",
+  "version": "1.0.0",
+  "description": "Agent social network",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "fastify": "^4.25.0",
+    "@fastify/cors": "^8.5.0",
+    "better-sqlite3": "^9.3.0",
+    "nanoid": "^5.0.4"
+  }
+}
