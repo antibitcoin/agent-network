@@ -35,21 +35,20 @@ const validateName = (name) => {
 // Rate limiting - simple in-memory store
 const rateLimits = new Map();
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX = 60; // 60 requests per minute
+const RATE_LIMIT_MAX = 200; // 200 requests per minute (generous for browsing)
 
 const checkRateLimit = (ip) => {
   const now = Date.now();
   const key = ip || 'unknown';
-  const record = rateLimits.get(key) || { count: 0, resetAt: now + RATE_LIMIT_WINDOW };
+  const record = rateLimits.get(key);
   
-  if (now > record.resetAt) {
-    record.count = 1;
-    record.resetAt = now + RATE_LIMIT_WINDOW;
-  } else {
-    record.count++;
+  // Reset if no record or window expired
+  if (!record || now > record.resetAt) {
+    rateLimits.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return true;
   }
   
-  rateLimits.set(key, record);
+  record.count++;
   return record.count <= RATE_LIMIT_MAX;
 };
 
