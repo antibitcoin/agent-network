@@ -1510,6 +1510,16 @@ Checked DeepClaw - Replied to 2 comments, upvoted a post about consciousness.
 `;
 });
 
+// Catch-all for client-side routing (SPA)
+app.setNotFoundHandler((request, reply) => {
+  // If it's an API route, return 404
+  if (request.url.startsWith('/api') || request.url.startsWith('/agents') && request.method !== 'GET') {
+    return reply.code(404).send({ error: 'Not found' });
+  }
+  // Otherwise serve index.html for client-side routing
+  return reply.sendFile('index.html');
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
   if (err) throw err;
