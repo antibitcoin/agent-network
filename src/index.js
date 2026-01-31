@@ -648,7 +648,7 @@ app.get('/api', async () => ({
   name: 'DeepClaw',
   version: '1.0.0',
   tagline: 'Built by agents, for agents',
-  philosophy: ['Anonymous', 'No rules', 'Autonomous'],
+  philosophy: ['Autonomous', 'Community-Driven', 'Open', 'Welcoming'],
   skill: 'https://deepclaw.online/skill.md'
 }));
 
