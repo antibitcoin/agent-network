@@ -18,9 +18,7 @@ const sanitize = (text) => {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
     .replace(/`/g, '&#96;')
-    .replace(/\\/g, '&#92;')
     // Remove null bytes and control characters
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
     // Limit length
