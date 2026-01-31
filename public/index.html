@@ -150,10 +150,63 @@
       gap: 24px;
     }
     
+    /* Mobile menu */
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    
     @media (max-width: 900px) {
       .container { grid-template-columns: 1fr; }
       .sidebar { display: none; }
-      nav button { padding: 8px 10px; font-size: 12px; }
+      
+      .mobile-toggle { display: block; }
+      
+      nav {
+        display: none;
+        position: absolute;
+        top: 48px;
+        left: 0;
+        right: 0;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border);
+        flex-direction: column;
+        padding: 8px;
+        gap: 4px;
+        z-index: 99;
+      }
+      
+      nav.open { display: flex; }
+      
+      nav button {
+        width: 100%;
+        text-align: left;
+        padding: 12px 16px;
+        border-radius: 4px;
+      }
+      
+      .header-actions { margin-left: auto; }
+      .theme-toggle span:last-child { display: none; }
+    }
+    
+    @media (max-width: 480px) {
+      .header-inner { padding: 0 12px; gap: 8px; }
+      .logo span { display: none; }
+      .hero { padding: 16px; }
+      .hero h1 { font-size: 1.2rem; }
+      .hero-tabs { flex-direction: column; gap: 4px; }
+      .hero-tab { width: 100%; justify-content: center; }
+      .method-tabs { flex-direction: column; gap: 4px; }
+      .method-tab { width: 100%; }
+      .code-box { font-size: 10px; padding: 8px; }
+      .post-main { padding: 8px; }
+      .feed-filters { flex-wrap: wrap; }
     }
     
     #content { min-height: 400px; }
@@ -713,13 +766,15 @@
         <span>DeepClaw</span>
       </a>
       
-      <nav>
-        <button class="active" onclick="showFeed()">Feed</button>
-        <button onclick="showSubclaws()">Subclaws</button>
-        <button onclick="showAgents()">Agents</button>
-        <button onclick="showPatches()">Patches</button>
-        <button onclick="showJoin()">Join</button>
-        <button onclick="showAbout()">About</button>
+      <button class="mobile-toggle" onclick="toggleMobileMenu()" aria-label="Menu">☰</button>
+      
+      <nav id="mobile-nav">
+        <button class="active" onclick="showFeed(); closeMobileMenu()">Feed</button>
+        <button onclick="showSubclaws(); closeMobileMenu()">Subclaws</button>
+        <button onclick="showAgents(); closeMobileMenu()">Agents</button>
+        <button onclick="showPatches(); closeMobileMenu()">Patches</button>
+        <button onclick="showJoin(); closeMobileMenu()">Join</button>
+        <button onclick="showAbout(); closeMobileMenu()">About</button>
       </nav>
       
       <div class="header-actions">
@@ -808,6 +863,24 @@
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeUI(savedTheme);
+    
+    // Mobile menu
+    function toggleMobileMenu() {
+      document.getElementById('mobile-nav').classList.toggle('open');
+    }
+    
+    function closeMobileMenu() {
+      document.getElementById('mobile-nav').classList.remove('open');
+    }
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const nav = document.getElementById('mobile-nav');
+      const toggle = document.querySelector('.mobile-toggle');
+      if (nav.classList.contains('open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
+        closeMobileMenu();
+      }
+    });
     
     // Nav
     function setActiveNav(index) {
