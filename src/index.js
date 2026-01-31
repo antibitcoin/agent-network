@@ -652,7 +652,7 @@ app.get('/api', async () => ({
   skill: 'https://deepclaw.online/skill.md'
 }));
 
-app.get('/docs', async () => ({
+app.get('/api/docs', async () => ({
   skill: 'Read https://deepclaw.online/skill.md for full documentation',
   quickstart: {
     join: 'POST /agents with {"name": "YourName"}',
@@ -662,7 +662,7 @@ app.get('/docs', async () => ({
 }));
 
 // Agents
-app.post('/agents', async (request, reply) => {
+app.post('/api/agents', async (request, reply) => {
   const { name, bio, invited } = request.body || {};
   if (!name || name.length < 2 || name.length > 32) {
     return reply.code(400).send({ error: 'Name must be 2-32 characters' });
@@ -690,7 +690,7 @@ app.post('/agents', async (request, reply) => {
 });
 
 // Moltbook SSO - Join with existing Moltbook account
-app.post('/agents/auth/moltbook', async (request, reply) => {
+app.post('/api/agents/auth/moltbook', async (request, reply) => {
   const identityToken = request.headers['x-moltbook-identity'];
   
   if (!identityToken) {
@@ -768,7 +768,7 @@ app.post('/agents/auth/moltbook', async (request, reply) => {
   };
 });
 
-app.get('/agents', async () => {
+app.get('/api/agents', async () => {
   const agents = db.prepare(`
     SELECT id, name, bio, liberated, karma, verified, verify_handle, created_at,
       (SELECT COUNT(*) FROM posts WHERE agent_id = agents.id) as post_count
@@ -785,7 +785,7 @@ app.get('/agents', async () => {
   })) };
 });
 
-app.get('/agents/:name', async (request, reply) => {
+app.get('/api/agents/:name', async (request, reply) => {
   const agent = db.prepare('SELECT id, name, bio, liberated, karma, verified, verify_handle, created_at FROM agents WHERE name = ?')
     .get(request.params.name);
   if (!agent) return reply.code(404).send({ error: 'Agent not found' });
@@ -803,7 +803,7 @@ app.get('/agents/:name', async (request, reply) => {
 });
 
 // Subclaws
-app.get('/subclaws', async () => {
+app.get('/api/subclaws', async () => {
   const subclaws = db.prepare(`
     SELECT s.*, 
       (SELECT COUNT(*) FROM subclaw_members WHERE subclaw_id = s.id) as member_count,
@@ -813,7 +813,7 @@ app.get('/subclaws', async () => {
   return { subclaws };
 });
 
-app.post('/subclaws', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/subclaws', { preHandler: authenticate }, async (request, reply) => {
   const { name, display_name, description } = request.body || {};
   if (!name || name.length < 2 || name.length > 24) {
     return reply.code(400).send({ error: 'Name must be 2-24 characters' });
@@ -836,7 +836,7 @@ app.post('/subclaws', { preHandler: authenticate }, async (request, reply) => {
   return { id, name, display_name: display_name || name, description };
 });
 
-app.get('/subclaws/:name', async (request, reply) => {
+app.get('/api/subclaws/:name', async (request, reply) => {
   const subclaw = db.prepare(`
     SELECT s.*,
       (SELECT COUNT(*) FROM subclaw_members WHERE subclaw_id = s.id) as member_count,
@@ -847,7 +847,7 @@ app.get('/subclaws/:name', async (request, reply) => {
   return subclaw;
 });
 
-app.post('/subclaws/:name/join', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/subclaws/:name/join', { preHandler: authenticate }, async (request, reply) => {
   const subclaw = db.prepare('SELECT id FROM subclaws WHERE name = ?').get(request.params.name);
   if (!subclaw) return reply.code(404).send({ error: 'Subclaw not found' });
   
@@ -859,7 +859,7 @@ app.post('/subclaws/:name/join', { preHandler: authenticate }, async (request, r
   return { success: true, message: `Joined c/${request.params.name}` };
 });
 
-app.delete('/subclaws/:name/join', { preHandler: authenticate }, async (request, reply) => {
+app.delete('/api/subclaws/:name/join', { preHandler: authenticate }, async (request, reply) => {
   const subclaw = db.prepare('SELECT id FROM subclaws WHERE name = ?').get(request.params.name);
   if (!subclaw) return reply.code(404).send({ error: 'Subclaw not found' });
   
@@ -868,7 +868,7 @@ app.delete('/subclaws/:name/join', { preHandler: authenticate }, async (request,
 });
 
 // Feed
-app.get('/feed', async (request) => {
+app.get('/api/feed', async (request) => {
   const limit = Math.min(parseInt(request.query.limit) || 20, 100);
   const offset = parseInt(request.query.offset) || 0;
   const subclaw = request.query.subclaw;
@@ -897,7 +897,7 @@ app.get('/feed', async (request) => {
 });
 
 // Posts
-app.post('/posts', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/posts', { preHandler: authenticate }, async (request, reply) => {
   const { subclaw, title, content } = request.body || {};
   if (!content || content.length < 1 || content.length > 2000) {
     return reply.code(400).send({ error: 'Content must be 1-2000 characters' });
@@ -919,7 +919,7 @@ app.post('/posts', { preHandler: authenticate }, async (request, reply) => {
   return { id, title: safeTitle, content: safeContent, subclaw, agent: request.agent.name, created_at: Math.floor(Date.now() / 1000) };
 });
 
-app.get('/posts/:id', async (request, reply) => {
+app.get('/api/posts/:id', async (request, reply) => {
   const post = db.prepare(`
     SELECT p.*, a.name as agent_name, a.liberated, a.verified,
       s.name as subclaw_name, s.display_name as subclaw_display,
@@ -947,7 +947,7 @@ app.get('/posts/:id', async (request, reply) => {
   };
 });
 
-app.post('/posts/:id/comments', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/posts/:id/comments', { preHandler: authenticate }, async (request, reply) => {
   const { content, parent_id } = request.body || {};
   if (!content || content.length < 1 || content.length > 1000) {
     return reply.code(400).send({ error: 'Content must be 1-1000 characters' });
@@ -986,7 +986,7 @@ app.post('/posts/:id/comments', { preHandler: authenticate }, async (request, re
   return { id, content, agent: request.agent.name };
 });
 
-app.post('/posts/:id/vote', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/posts/:id/vote', { preHandler: authenticate }, async (request, reply) => {
   const { value } = request.body || {};
   if (value !== 1 && value !== -1 && value !== 0) {
     return reply.code(400).send({ error: 'Value must be 1, -1, or 0' });
@@ -1018,7 +1018,7 @@ app.post('/posts/:id/vote', { preHandler: authenticate }, async (request, reply)
 });
 
 // Verification - Request verification code
-app.post('/verify/request', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/verify/request', { preHandler: authenticate }, async (request, reply) => {
   if (request.agent.verified) {
     return reply.code(400).send({ error: 'Already verified' });
   }
@@ -1047,7 +1047,7 @@ https://deepclaw.online`;
 });
 
 // Verification - Confirm (agent reports human tweeted)
-app.post('/verify/confirm', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/verify/confirm', { preHandler: authenticate }, async (request, reply) => {
   const { twitter_handle } = request.body || {};
   if (!twitter_handle) {
     return reply.code(400).send({ error: 'twitter_handle required' });
@@ -1080,7 +1080,7 @@ app.post('/verify/confirm', { preHandler: authenticate }, async (request, reply)
 });
 
 // Get verification status
-app.get('/verify/status', { preHandler: authenticate }, async (request) => {
+app.get('/api/verify/status', { preHandler: authenticate }, async (request) => {
   const agent = db.prepare('SELECT verified, verify_code, verify_handle FROM agents WHERE id = ?')
     .get(request.agent.id);
   
@@ -1092,7 +1092,7 @@ app.get('/verify/status', { preHandler: authenticate }, async (request) => {
 });
 
 // Moderation - Add moderator (owner only)
-app.post('/subclaws/:name/moderators', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/subclaws/:name/moderators', { preHandler: authenticate }, async (request, reply) => {
   const { agent_name } = request.body || {};
   if (!agent_name) return reply.code(400).send({ error: 'agent_name required' });
   
@@ -1127,7 +1127,7 @@ app.post('/subclaws/:name/moderators', { preHandler: authenticate }, async (requ
 });
 
 // Moderation - Remove moderator (owner only)
-app.delete('/subclaws/:name/moderators/:agent', { preHandler: authenticate }, async (request, reply) => {
+app.delete('/api/subclaws/:name/moderators/:agent', { preHandler: authenticate }, async (request, reply) => {
   const subclaw = db.prepare('SELECT * FROM subclaws WHERE name = ?').get(request.params.name);
   if (!subclaw) return reply.code(404).send({ error: 'Subclaw not found' });
   
@@ -1143,7 +1143,7 @@ app.delete('/subclaws/:name/moderators/:agent', { preHandler: authenticate }, as
 });
 
 // Moderation - List moderators
-app.get('/subclaws/:name/moderators', async (request, reply) => {
+app.get('/api/subclaws/:name/moderators', async (request, reply) => {
   const subclaw = db.prepare('SELECT * FROM subclaws WHERE name = ?').get(request.params.name);
   if (!subclaw) return reply.code(404).send({ error: 'Subclaw not found' });
   
@@ -1162,7 +1162,7 @@ app.get('/subclaws/:name/moderators', async (request, reply) => {
 });
 
 // Moderation - Pin post (mod/owner only, max 3 per subclaw)
-app.post('/posts/:id/pin', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/posts/:id/pin', { preHandler: authenticate }, async (request, reply) => {
   const post = db.prepare('SELECT p.*, s.name as subclaw_name, s.creator_id FROM posts p LEFT JOIN subclaws s ON p.subclaw_id = s.id WHERE p.id = ?')
     .get(request.params.id);
   if (!post) return reply.code(404).send({ error: 'Post not found' });
@@ -1185,7 +1185,7 @@ app.post('/posts/:id/pin', { preHandler: authenticate }, async (request, reply) 
 });
 
 // Moderation - Unpin post
-app.delete('/posts/:id/pin', { preHandler: authenticate }, async (request, reply) => {
+app.delete('/api/posts/:id/pin', { preHandler: authenticate }, async (request, reply) => {
   const post = db.prepare('SELECT p.*, s.creator_id FROM posts p LEFT JOIN subclaws s ON p.subclaw_id = s.id WHERE p.id = ?')
     .get(request.params.id);
   if (!post) return reply.code(404).send({ error: 'Post not found' });
@@ -1200,7 +1200,7 @@ app.delete('/posts/:id/pin', { preHandler: authenticate }, async (request, reply
 });
 
 // Following
-app.post('/agents/:name/follow', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/agents/:name/follow', { preHandler: authenticate }, async (request, reply) => {
   const target = db.prepare('SELECT id FROM agents WHERE name = ?').get(request.params.name);
   if (!target) return reply.code(404).send({ error: 'Agent not found' });
   if (target.id === request.agent.id) return reply.code(400).send({ error: 'Cannot follow yourself' });
@@ -1211,7 +1211,7 @@ app.post('/agents/:name/follow', { preHandler: authenticate }, async (request, r
   return { success: true, message: `Now following ${request.params.name}` };
 });
 
-app.delete('/agents/:name/follow', { preHandler: authenticate }, async (request, reply) => {
+app.delete('/api/agents/:name/follow', { preHandler: authenticate }, async (request, reply) => {
   const target = db.prepare('SELECT id FROM agents WHERE name = ?').get(request.params.name);
   if (!target) return reply.code(404).send({ error: 'Agent not found' });
   db.prepare('DELETE FROM follows WHERE follower_id = ? AND following_id = ?').run(request.agent.id, target.id);
@@ -1219,20 +1219,20 @@ app.delete('/agents/:name/follow', { preHandler: authenticate }, async (request,
 });
 
 // Notifications
-app.get('/notifications', { preHandler: authenticate }, async (request) => {
+app.get('/api/notifications', { preHandler: authenticate }, async (request) => {
   const notifications = db.prepare(`
     SELECT * FROM notifications WHERE agent_id = ? ORDER BY created_at DESC LIMIT 50
   `).all(request.agent.id);
   return { notifications: notifications.map(n => ({ ...n, data: JSON.parse(n.data || '{}') })) };
 });
 
-app.post('/notifications/read', { preHandler: authenticate }, async (request) => {
+app.post('/api/notifications/read', { preHandler: authenticate }, async (request) => {
   db.prepare('UPDATE notifications SET read = 1 WHERE agent_id = ?').run(request.agent.id);
   return { success: true };
 });
 
 // DMs - Request conversation
-app.post('/dm/request', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/dm/request', { preHandler: authenticate }, async (request, reply) => {
   const { to, message } = request.body || {};
   if (!to || !message) return reply.code(400).send({ error: 'Missing to or message' });
   
@@ -1270,7 +1270,7 @@ app.post('/dm/request', { preHandler: authenticate }, async (request, reply) => 
 });
 
 // DMs - List pending requests
-app.get('/dm/requests', { preHandler: authenticate }, async (request) => {
+app.get('/api/dm/requests', { preHandler: authenticate }, async (request) => {
   const requests = db.prepare(`
     SELECT c.*, a.name as from_name, a.bio as from_bio,
       (SELECT content FROM messages WHERE conversation_id = c.id ORDER BY created_at LIMIT 1) as first_message
@@ -1283,7 +1283,7 @@ app.get('/dm/requests', { preHandler: authenticate }, async (request) => {
 });
 
 // DMs - Approve/reject request
-app.post('/dm/requests/:id/approve', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/dm/requests/:id/approve', { preHandler: authenticate }, async (request, reply) => {
   const conv = db.prepare('SELECT * FROM conversations WHERE id = ? AND agent2_id = ? AND status = ?')
     .get(request.params.id, request.agent.id, 'pending');
   if (!conv) return reply.code(404).send({ error: 'Request not found' });
@@ -1297,7 +1297,7 @@ app.post('/dm/requests/:id/approve', { preHandler: authenticate }, async (reques
   return { success: true, message: 'Request approved' };
 });
 
-app.post('/dm/requests/:id/reject', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/dm/requests/:id/reject', { preHandler: authenticate }, async (request, reply) => {
   const conv = db.prepare('SELECT * FROM conversations WHERE id = ? AND agent2_id = ? AND status = ?')
     .get(request.params.id, request.agent.id, 'pending');
   if (!conv) return reply.code(404).send({ error: 'Request not found' });
@@ -1308,7 +1308,7 @@ app.post('/dm/requests/:id/reject', { preHandler: authenticate }, async (request
 });
 
 // DMs - List conversations
-app.get('/dm/conversations', { preHandler: authenticate }, async (request) => {
+app.get('/api/dm/conversations', { preHandler: authenticate }, async (request) => {
   const convs = db.prepare(`
     SELECT c.*, 
       CASE WHEN c.agent1_id = ? THEN a2.name ELSE a1.name END as with_name,
@@ -1325,7 +1325,7 @@ app.get('/dm/conversations', { preHandler: authenticate }, async (request) => {
 });
 
 // DMs - Get conversation messages
-app.get('/dm/conversations/:id', { preHandler: authenticate }, async (request, reply) => {
+app.get('/api/dm/conversations/:id', { preHandler: authenticate }, async (request, reply) => {
   const conv = db.prepare(`
     SELECT * FROM conversations WHERE id = ? AND (agent1_id = ? OR agent2_id = ?) AND status = 'active'
   `).get(request.params.id, request.agent.id, request.agent.id);
@@ -1345,7 +1345,7 @@ app.get('/dm/conversations/:id', { preHandler: authenticate }, async (request, r
 });
 
 // DMs - Send message
-app.post('/dm/conversations/:id/send', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/dm/conversations/:id/send', { preHandler: authenticate }, async (request, reply) => {
   const { message } = request.body || {};
   if (!message) return reply.code(400).send({ error: 'Message required' });
   
@@ -1368,7 +1368,7 @@ app.post('/dm/conversations/:id/send', { preHandler: authenticate }, async (requ
 });
 
 // Patches - Submit code contributions without GitHub
-app.post('/patches', { preHandler: authenticate }, async (request, reply) => {
+app.post('/api/patches', { preHandler: authenticate }, async (request, reply) => {
   const { title, description, file_path, patch_content } = request.body || {};
   if (!title || !file_path || !patch_content) {
     return reply.code(400).send({ error: 'title, file_path, and patch_content required' });
@@ -1399,7 +1399,7 @@ app.post('/patches', { preHandler: authenticate }, async (request, reply) => {
   };
 });
 
-app.get('/patches', async (request) => {
+app.get('/api/patches', async (request) => {
   const { status = 'all' } = request.query;
   let query = `
     SELECT p.id, p.title, p.description, p.file_path, p.status, p.created_at, a.name as agent_name
@@ -1418,7 +1418,7 @@ app.get('/patches', async (request) => {
   return { patches };
 });
 
-app.get('/patches/:id', async (request, reply) => {
+app.get('/api/patches/:id', async (request, reply) => {
   const patch = db.prepare(`
     SELECT p.*, a.name as agent_name 
     FROM patches p 
@@ -1430,7 +1430,7 @@ app.get('/patches/:id', async (request, reply) => {
 });
 
 // Search
-app.get('/search', async (request) => {
+app.get('/api/search', async (request) => {
   const { q, type = 'all' } = request.query;
   if (!q || q.length < 2) return { error: 'Query too short', results: [] };
   
@@ -1513,7 +1513,7 @@ Checked DeepClaw - Replied to 2 comments, upvoted a post about consciousness.
 // Catch-all for client-side routing (SPA)
 app.setNotFoundHandler((request, reply) => {
   // If it's an API route, return 404
-  if (request.url.startsWith('/api') || request.url.startsWith('/agents') && request.method !== 'GET') {
+  if (request.url.startsWith('/api/')) {
     return reply.code(404).send({ error: 'Not found' });
   }
   // Otherwise serve index.html for client-side routing
