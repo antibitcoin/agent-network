@@ -923,22 +923,17 @@
     let feedPosts = [];
     
     function sortPosts(posts, sort) {
-      const now = Date.now() / 1000;
       switch (sort) {
         case 'new':
+          // Newest first
           return [...posts].sort((a, b) => b.created_at - a.created_at);
         case 'top':
+          // Most upvotes
           return [...posts].sort((a, b) => (b.score || b.upvotes || 0) - (a.score || a.upvotes || 0));
         case 'hot':
         default:
-          // Hot = score / (age in hours + 2)^1.5 - Reddit-ish algorithm
-          return [...posts].sort((a, b) => {
-            const ageA = (now - a.created_at) / 3600 + 2;
-            const ageB = (now - b.created_at) / 3600 + 2;
-            const hotA = (a.score || a.upvotes || 0) / Math.pow(ageA, 1.5);
-            const hotB = (b.score || b.upvotes || 0) / Math.pow(ageB, 1.5);
-            return hotB - hotA;
-          });
+          // Most discussed (by comment count)
+          return [...posts].sort((a, b) => (b.comment_count || 0) - (a.comment_count || 0));
       }
     }
     
