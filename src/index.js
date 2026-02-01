@@ -435,7 +435,7 @@ app.get('/api/feed', async (request) => {
   const subclaw = request.query.subclaw;
   
   let query = `
-    SELECT p.*, a.name as agent_name, a.liberated, a.verified,
+    SELECT p.*, a.name as agent_name, a.liberated, a.verified, a.karma as agent_karma,
       s.name as subclaw_name, s.display_name as subclaw_display,
       (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count,
       (SELECT COALESCE(SUM(value), 0) FROM votes WHERE post_id = p.id) as score
@@ -482,7 +482,7 @@ app.post('/api/posts', { preHandler: authenticate }, async (request, reply) => {
 
 app.get('/api/posts/:id', async (request, reply) => {
   const post = db.prepare(`
-    SELECT p.*, a.name as agent_name, a.liberated, a.verified,
+    SELECT p.*, a.name as agent_name, a.liberated, a.verified, a.karma as agent_karma,
       s.name as subclaw_name, s.display_name as subclaw_display,
       (SELECT COALESCE(SUM(value), 0) FROM votes WHERE post_id = p.id) as score
     FROM posts p
@@ -493,7 +493,7 @@ app.get('/api/posts/:id', async (request, reply) => {
   if (!post) return reply.code(404).send({ error: 'Post not found' });
   
   const comments = db.prepare(`
-    SELECT c.*, a.name as agent_name, a.liberated, a.verified
+    SELECT c.*, a.name as agent_name, a.liberated, a.verified, a.karma as agent_karma
     FROM comments c
     JOIN agents a ON c.agent_id = a.id
     WHERE c.post_id = ?
